@@ -50,6 +50,7 @@ class Unet_layers(nn.Module):
         return downscale_model
     
     def forward(self, x):
+        pass
 
 
 
