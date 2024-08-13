@@ -1,21 +1,6 @@
 import torch
 import torch.nn as nn
-
-class DecoderBlock(nn.Module):
-    def __init__(self, in_channels, out_channels):
-        super(DecoderBlock, self).__init__()
-        self.upconv = nn.ConvTranspose2d(in_channels, out_channels, kernel_size=2, stride=2)
-        self.decode = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-        )
-
-    def forward(self, x, skip):
-        x = self.upconv(x)
-        x = torch.cat((x, skip), dim=1)
-        return self.decode(x)
+import torch.nn.functional as F
 
 class UNet(nn.Module):
     def __init__(self):
@@ -54,30 +39,67 @@ class UNet(nn.Module):
             nn.ReLU(inplace=True),
         )
 
-        self.decoder = nn.ModuleList([
-            DecoderBlock(1024, 512),
-            DecoderBlock(512, 256),
-            DecoderBlock(256, 128),
-            DecoderBlock(128, 64)
-        ])
+        self.upconv4 = nn.ConvTranspose2d(1024, 512, kernel_size=2, stride=2)
+        self.decoder4 = nn.Sequential(
+            nn.Conv2d(1024, 512, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+        )
 
-        self.final_conv = nn.Conv2d(64, 1, kernel_size=1)
+        self.upconv3 = nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2)
+        self.decoder3 = nn.Sequential(
+            nn.Conv2d(512, 256, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(256, 256, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+        )
+
+        self.upconv2 = nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2)
+        self.decoder2 = nn.Sequential(
+            nn.Conv2d(256, 128, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(128, 128, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+        )
+
+        self.upconv1 = nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2)
+        self.decoder1 = nn.Sequential(
+            nn.Conv2d(128, 64, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(64, 64, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(64, 1, kernel_size=1),
+        )
 
     def forward(self, x):
-        enc1 = self.encoder[:4](x)
+        enc1 = self.encoder[0:4](x)
         enc2 = self.encoder[4:8](self.encoder[3](enc1))
         enc3 = self.encoder[8:12](self.encoder[7](enc2))
         enc4 = self.encoder[12:16](self.encoder[11](enc3))
 
         bottleneck = self.bottleneck(self.encoder[15](enc4))
 
-        dec4 = self.decoder[0](bottleneck, enc4)
-        dec3 = self.decoder[1](dec4, enc3)
-        dec2 = self.decoder[2](dec3, enc2)
-        dec1 = self.decoder[3](dec2, enc1)
+        dec4 = self.upconv4(bottleneck)
+        dec4 = torch.cat((dec4, enc4), dim=1)
+        dec4 = self.decoder4(dec4)
 
-        return torch.sigmoid(self.final_conv(dec1))
+        dec3 = self.upconv3(dec4)
+        dec3 = torch.cat((dec3, enc3), dim=1)
+        dec3 = self.decoder3(dec3)
 
+        dec2 = self.upconv2(dec3)
+        dec2 = torch.cat((dec2, enc2), dim=1)
+        dec2 = self.decoder2(dec2)
+
+        dec1 = self.upconv1(dec2)
+        dec1 = torch.cat((dec1, enc1), dim=1)
+        dec1 = self.decoder1(dec1)
+
+        return torch.sigmoid(dec1)
+
+# Instantiate the model
+model = UNet()
 # Instantiate the model
 model = UNet()
 print(model)
