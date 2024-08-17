@@ -99,7 +99,7 @@ class UNet(nn.Module):
         return torch.sigmoid(dec1)
 
 # Instantiate the model
-model = UNet()
+# model = UNet()
 # Instantiate the model
 model = UNet()
 print(model)

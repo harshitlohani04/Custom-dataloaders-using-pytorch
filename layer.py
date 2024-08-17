@@ -1,10 +1,14 @@
+import torch
 import torch.nn as nn
 from typing import Optional
 
 class Unet_layers(nn.Module):
     def __init__(self, pool_kernel: Optional[int] = 2, pool_padding: Optional[int] = 0,
                  pool_stride: Optional[int] = 1,kernel_size: Optional[int] = 2,
-                 stride: Optional[int]=1, padding:Optional[int]=0, base_output:Optional[int]=64) -> None:
+                 stride: Optional[int]=1, padding:Optional[int]=0, base_output:Optional[int]=64,
+                 numOflayers = 4) -> None:
+        
+        super(Unet_layers, self).__init__()
         # Defining the params for the Convolutional Layer
         self.kernel_size = kernel_size
         self.padding = padding
@@ -17,17 +21,18 @@ class Unet_layers(nn.Module):
 
         # Initializing the model base
         self.base_output = base_output
-    
-    def createModel_downscaling(self, numOfLayers, inpdims):
+        self.numOflayers = numOflayers
+
+    def createModel_downscaling(self, inpdims):
         out_dims = self.base_output
         layers = []
-        for _ in range(numOfLayers):
+        for _ in range(self.numOfLayers):
             layers.append(nn.Conv2d(inpdims, out_dims, kernel_size=self.kernel_size, stride=self.stride, padding=self.padding))
             layers.append(nn.ReLU(inplace = True))
             layers.append(nn.Conv2d(out_dims, out_dims, kernel_size=self.kernel_size, stride=self.stride, padding=self.padding))
             layers.append(nn.ReLU(inplace = True))
             layers.append(nn.MaxPool2d(kernel_size = self.pool_kernel, padding = self.pool_padding, stride = self.pool_stride))
-            
+
             inpdims = out_dims
             out_dims *= 2
 
@@ -47,8 +52,9 @@ class Unet_layers(nn.Module):
         return bottleneck
 
 
-    def createModel_upscaling(self, numOfLayers):
+    def createModel_upscaling(self):
         outdims = self.base_output
+        numOfLayers = self.numOflayers
         layers = []
         for i in range(numOfLayers):
             if i!=numOfLayers-1:
@@ -62,16 +68,44 @@ class Unet_layers(nn.Module):
                 layers.append(nn.ConvTranspose2d(outdims, outdims//2, kernel_size=self.pool_kernel, stride=self.pool_stride, padding=self.pool_padding))
                 layers.append(nn.Conv2d(outdims, outdims//2, kernel_size=self.kernel_size, stride=self.stride, padding=self.padding))
                 layers.append(nn.ReLU(inplace = True))
-                layers.append(nn.Conv2d(outdims//2, 1, kernel_size=self.kernel_size, stride=self.stride, padding=self.padding))
+                layers.append(nn.Conv2d(outdims//2, outdims//2, kernel_size=self.kernel_size, stride=self.stride, padding=self.padding))
                 layers.append(nn.ReLU(inplace = True))
+                layers.append(nn.Conv2d(outdims//2, 1, kernel_size=1, stride=1))
                 outdims = 1
-                
+
         self.base_output = outdims
         downscale_model = nn.Sequential(*layers)
         return downscale_model
-    
+
     def forward(self, x):
-        pass
+        numOflayers = self.numOflayers
+        encLayers = self.createModel_downscaling(numOflayers)
+        prev = 0
+        skip = []
+        prevResult = x
+        for i in range(5, numOflayers*5+1, 5):
+            enc = encLayers[prev:i](prevResult)
+            skip.append(enc)
+            prev = i
+            prevResult = enc
+        
+        bottleneck = self.bottleneck()
+        encPathFinal = bottleneck(prevResult)
+        decPath = self.createModel_upscaling(numOflayers)
+        out = encPathFinal
+        for i in range(numOflayers):
+            if i!=numOflayers-1:
+                dec = decPath[i*5](out)
+                dec = torch.cat((dec, skip[-(i+1)]), dim = 1)
+                dec = decPath[i*5+1:i*5+5](dec)
+            else:
+                dec = decPath[i*5](out)
+                dec = torch.cat((dec, skip[-(i+1)]), dim = 1)
+                dec = decPath[i*5+1:i*5+6](dec)
+            out = dec
 
+        return torch.sigmoid(out)
+            
 
-
+model = Unet_layers(pool_stride=2, pool_kernel=2, pool_padding=1, padding=0, kernel_size=3, stride=1)
+print(model)
