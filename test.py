@@ -7,9 +7,12 @@
 # print(sample)
 # print(test)
 
-arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-j = 0
-for i in range(1, len(arr)+1):
-    print(arr[-i])
-    
+# Creating an empty set
+empty_set = set()
+
+# Creating a set from a list or other iterable
+my_set = set([1, 2, 3, 4, 5])
+print(my_set)  # Output: {1, 2, 3, 4, 5}
+my_set.update([6,7])
+print(my_set)
 

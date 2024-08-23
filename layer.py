@@ -26,7 +26,7 @@ class Unet_layers(nn.Module):
     def createModel_downscaling(self, inpdims):
         out_dims = self.base_output
         layers = []
-        for _ in range(self.numOfLayers):
+        for _ in range(self.numOflayers):
             layers.append(nn.Conv2d(inpdims, out_dims, kernel_size=self.kernel_size, stride=self.stride, padding=self.padding))
             layers.append(nn.ReLU(inplace = True))
             layers.append(nn.Conv2d(out_dims, out_dims, kernel_size=self.kernel_size, stride=self.stride, padding=self.padding))
