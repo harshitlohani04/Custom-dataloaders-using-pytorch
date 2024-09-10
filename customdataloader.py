@@ -7,10 +7,7 @@ from torch.utils.data import DataLoader, Dataset
 import torchvision.transforms.functional as TF
 import random
 
-train_images = "./png/train"
-train_mask_images = "./png/train_labels"
-
-
+# Mapping Function
 def mapping(csvPath):
     '''
     0 --> Background
