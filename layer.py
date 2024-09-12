@@ -118,7 +118,3 @@ class Unet_layers(nn.Module):
             out = dec
 
         return torch.sigmoid(out)
-
-model = Unet_layers(pool_stride=2, pool_kernel=2, pool_padding=1, padding=0, kernel_size=3, stride=1)
-for name, param in model.named_parameters():
-    print(name, param.shape)

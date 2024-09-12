@@ -18,7 +18,15 @@ imgBatch = torch.utils.data.DataLoader(img_data, batch_size=16, shuffle=False, n
 
 
 if __name__ == "__main__":
-    layer_instance = UNet()
+
+    # Debugging the code for errors
+    print(("Select your model type : 1) Sequential || 2) Indivisual Layers"))
+    inp = int(input("Enter the value corresponding to the question: "))
+    if inp == 2:
+        layer_instance = UNet()
+    else:
+        layer_instance = Unet_layers()
+
     for img, masks in imgBatch:
         print(img.shape)
         print(masks.shape)
