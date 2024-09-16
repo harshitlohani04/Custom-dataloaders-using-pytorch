@@ -27,9 +27,9 @@ if __name__ == "__main__":
     else:
         layer_instance = Unet_layers()
 
-    for img, masks in imgBatch:
-        print(img.shape)
-        print(masks.shape)
+    # for img, masks in imgBatch:
+    #     print(img.shape)
+    #     print(masks.shape)
 
     epochs = 1
     lr = 0.01
@@ -42,9 +42,13 @@ if __name__ == "__main__":
 
         for i in range(epochs):
             for img, masks in imgBatch:
-                print(img.shape)
-                print(masks.shape)
-                outputs = layer_instance(img)
-                loss = error(outputs, masks)
+                optim.zero_grad()
+
+                x = img
+                y_ = masks
+                y_ = torch.squeeze(y_)
+
+                y = layer_instance(x)
+                loss = error(y, y_)
                 loss.backward()
                 optim.step()

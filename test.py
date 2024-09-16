@@ -1,18 +1,10 @@
-# from layer import Unet_layers
-# import torch.nn as nn
+from layer import Unet_layers
+import torch
 
-# layer = Unet_layers(pool_stride=2, pool_kernel=2, pool_padding=1, padding=0, kernel_size=3, stride=1)
-# sample = layer.createModel_downscaling(4, 3)
-# test = layer.createModel_upscaling(4)
-# print(sample)
-# print(test)
-import pandas as pd
-mapping = {}
-data = pd.read_csv("label_class_dict.csv")
-j=0
-for i in data.to_numpy():
-    mapping[j] = (i[1], i[2], i[3])
-    j+=1
-    print(i)
-print(mapping)
+model = Unet_layers()
+
+testImg = torch.randn(16, 3, 1497, 1497)
+
+out = model(testImg)
+print(f'Output shape: {out.shape}')
 
