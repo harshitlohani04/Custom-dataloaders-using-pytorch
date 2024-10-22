@@ -70,14 +70,14 @@ class Unet_layers(nn.Module):
         layers = []
         for i in range(numOfLayers):
             if i!=numOfLayers-1:
-                layers.append(nn.ConvTranspose2d(outdims, outdims//2, kernel_size=self.pool_kernel, stride=self.pool_stride, padding=self.pool_padding))
+                layers.append(nn.ConvTranspose2d(outdims, outdims//2, kernel_size=self.kernel_size, stride=self.pool_stride, padding=self.padding))
                 layers.append(nn.Conv2d(outdims, outdims//2, kernel_size=self.kernel_size, stride=self.stride, padding=self.padding))
                 layers.append(nn.ReLU(inplace = True))
                 layers.append(nn.Conv2d(outdims//2, outdims//2, kernel_size=self.kernel_size, stride=self.stride, padding=self.padding))
                 layers.append(nn.ReLU(inplace = True))
                 outdims //= 2
             else:
-                layers.append(nn.ConvTranspose2d(outdims, outdims//2, kernel_size=self.pool_kernel, stride=self.pool_stride, padding=self.pool_padding))
+                layers.append(nn.ConvTranspose2d(outdims, outdims//2, kernel_size=self.kernel_size, stride=self.pool_stride, padding=self.padding))
                 layers.append(nn.Conv2d(outdims, outdims//2, kernel_size=self.kernel_size, stride=self.stride, padding=self.padding))
                 layers.append(nn.ReLU(inplace = True))
                 layers.append(nn.Conv2d(outdims//2, outdims//2, kernel_size=self.kernel_size, stride=self.stride, padding=self.padding))

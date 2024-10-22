@@ -25,7 +25,7 @@ def mapping(csvPath):
 
 
 class CustomDataloader(Dataset):
-    def __init__(self, image_dir, mask_dir, augment = True, transforms = None) -> None:
+    def __init__(self, image_dir, mask_dir, augment = False, transforms = None) -> None:
         super().__init__()
         self.image_dir= image_dir
         self.mask_dir = mask_dir
@@ -35,6 +35,7 @@ class CustomDataloader(Dataset):
         self.masks = sorted(os.listdir(self.mask_dir))
 
         self.mapping_rgb = mapping("label_class_dict.csv")
+        # print(self.mapping_rgb)
 
     def __len__(self):
         return len(self.images)
@@ -63,6 +64,14 @@ class CustomDataloader(Dataset):
         if self.transforms:
             img = self.transforms(img)
             
+        '''
+            The code below converts the non-zero values in the mask to 1 and other to 0.
+            Since we are performing binary segmentatino we desire only 2 classes at max.
+            So this line code is basically eliminating the other non-zero values from the mask tensor.
+
+            (mask>0) returns a Boolean tensor that contains True for >0 and False for <=0
+            .float() converts them into 1.0 and 0.0 resp.
+        '''
         mask = (mask>0).float()
 
         return img, mask
