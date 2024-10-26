@@ -145,5 +145,5 @@ class UNet(nn.Module):
         dec1 = torch.cat((dec1, enc1), dim=1)
         x = self.decoder1(dec1)
 
-        return torch.sigmoid(x)
+        return x
 

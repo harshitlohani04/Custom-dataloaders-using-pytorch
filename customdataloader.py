@@ -6,6 +6,7 @@ from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 import torchvision.transforms.functional as TF
 import random
+import torch
 
 # Mapping Function
 def mapping(csvPath):
@@ -35,7 +36,6 @@ class CustomDataloader(Dataset):
         self.masks = sorted(os.listdir(self.mask_dir))
 
         self.mapping_rgb = mapping("label_class_dict.csv")
-        # print(self.mapping_rgb)
 
     def __len__(self):
         return len(self.images)
@@ -75,3 +75,4 @@ class CustomDataloader(Dataset):
         mask = (mask>0).float()
 
         return img, mask
+    
