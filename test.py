@@ -13,12 +13,11 @@ image_path = "./png/test/22828930_15.png"
 try:
     testImg = Image.open(image_path).convert('RGB')  # Ensure image is in RGB format
 
-    # Define the transformation to convert the image to a tensor
-    transform = transforms.Compose([  # Resize to match your model's input size
+    # Define and apply the transformation to convert the image to a tensor
+    transform = transforms.Compose([
         transforms.ToTensor() # Convert to tensor
     ])
 
-    # Apply the transformation
     testImg_tensor = transform(testImg)  # Shape will be (C, H, W)
 
     # Add a batch dimension (1, C, H, W)

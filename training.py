@@ -2,12 +2,10 @@ import numpy as np
 import torch.utils
 import torch.nn as nn
 import torch.utils.data
-from layer import Unet_layers
 from final_layer import UNet
 from customdataloader import CustomDataloader
 import torch
 from torch.utils.data import Subset
-from model import UnetGenerator
 from torch.autograd import Variable
 
 
@@ -19,8 +17,8 @@ if __name__ == "__main__":
     imgBatch = torch.utils.data.DataLoader(img_data, batch_size=16, shuffle=False, num_workers=4)
     generator = UNet()
 
-    epochs = 5
-    lr = 0.001
+    epochs = 1
+    lr = 0.01
 
     error = nn.CrossEntropyLoss()
     if not generator.parameters():
@@ -45,8 +43,13 @@ if __name__ == "__main__":
                     loss = error(y, y_)
                     print("hello")
                     print(f"Epoch number - {i} ||| Current loss - {loss}")
-                    loss.backward()
-                    optim.step()
+                    try:
+                        loss.backward()
+                        print("Backpass successfull")
+                        optim.step()
+                        print("Gradients evaluated successfully")
+                    except Exception as e:
+                        print(f"Error occurred : {e}")
 
                 except Exception as e:
                     print(f"An Unexpected error occurred. Error --> {e}")

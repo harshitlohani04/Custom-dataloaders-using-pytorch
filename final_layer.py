@@ -3,33 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-def crop_tensor(decoder_tensor, encoder_tensor):
-    """
-    Crops the decoder tensor to match the spatial dimensions of the encoder tensor.
-
-    Args:
-        decoder_tensor (torch.Tensor): The tensor from the decoder (output of upconv).
-        encoder_tensor (torch.Tensor): The tensor from the encoder (before pooling).
-    
-    Returns:
-        torch.Tensor: Cropped decoder tensor to match the encoder tensor.
-    """
-    _, _, h_decoder, w_decoder = decoder_tensor.size()
-    _, _, h_encoder, w_encoder = encoder_tensor.size()
-    
-    # Compute the difference in height and width
-    diff_h = h_encoder - h_decoder
-    diff_w = w_encoder - w_decoder
-    
-    # If there's a difference, crop the decoder tensor
-    if diff_h > 0:
-        encoder_tensor = encoder_tensor[:, :, :h_decoder, :]
-    if diff_w > 0:
-        encoder_tensor = encoder_tensor[:, :, :, :w_decoder]
-    
-    return encoder_tensor
-
-
 class UNet(nn.Module):
     def __init__(self):
         super(UNet, self).__init__()
