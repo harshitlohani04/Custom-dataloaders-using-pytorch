@@ -1,9 +1,4 @@
-# Implementation of index pooling as given in
-# "MultiScale Probability Map guided Index Pooling with Attention-based learning for Road and 
-# Building Segmentation" paper
-
 import torch.nn as nn
-import torch.functional as F
 import torch
 
 '''
@@ -17,23 +12,32 @@ class IdxPool(nn.Module):
     def __init__(self, kernel_size):
         super(IdxPool, self).__init__()
         self.kernel_size = kernel_size
-        self.custom_kernel = [torch.tensor([[[[1, 0], [0, 0]]]], dtype = torch.float32),
-                              torch.tensor([[[[0, 1], [0, 0]]]], dtype = torch.float32),
-                              torch.tensor([[[[0, 0], [1, 0]]]], dtype = torch.float32), 
-                              torch.tensor([[[[0, 0], [0, 1]]]], dtype = torch.float32)
-                            ]
+        self.custom_kernel = [
+            torch.tensor([[[[1, 0], [0, 0]]]], dtype=torch.float32),
+            torch.tensor([[[[0, 1], [0, 0]]]], dtype=torch.float32),
+            torch.tensor([[[[0, 0], [1, 0]]]], dtype=torch.float32),
+            torch.tensor([[[[0, 0], [0, 1]]]], dtype=torch.float32)
+        ]
 
     def forward(self, x):
-        _, channels, _, _ = x.size()
-        conv = nn.Conv2d(channels, 4*channels, kernel_size=2, bias=False, stride=2) # bias = False for simplicity
-        for i, kernel in enumerate(self.custom_kernel):
+        batch_size, channels, height, width = x.size()
+        output = []
+
+        # Iterate over each custom kernel
+        for kernel in self.custom_kernel:
+            kernel = kernel.expand(channels, 1, *kernel.shape[2:])  # Shape becomes [channels, 1, 2, 2]
+            conv = nn.Conv2d(
+                in_channels=channels, out_channels=channels, kernel_size=self.kernel_size, stride=2,
+                padding=0, groups=channels, bias=False
+            )
+            
             with torch.no_grad():
                 conv.weight.data = kernel
-            conv.weight.requires_grad = False # So that weights are not updated
+            conv.weight.requires_grad = False  # Ensure these weights are fixed
+
             out = conv(x)
-            if i == 0:
-                tensor = out
-            else:
-                tensor = torch.cat((tensor, out), dim = 1)
-        return tensor
+            output.append(out)
         
+        tensor = torch.cat(output, dim=1) # Concatenate all outputs along the channel dimension
+
+        return tensor
