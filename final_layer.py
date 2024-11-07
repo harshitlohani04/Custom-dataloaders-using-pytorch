@@ -1,46 +1,57 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from index.IdxPool import IdxPool
 
 
 class UNet(nn.Module):
     def __init__(self):
         super(UNet, self).__init__()
-
+        self.pool = IdxPool(kernel_size = 2)
         self.encoder = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=3, padding=1),
+            nn.Conv2d(3, 16, kernel_size=3, padding=1),
+            nn.BatchNorm2d(16),
             nn.ReLU(inplace=True),
-            nn.Conv2d(64, 64, kernel_size=3, padding=1),
+            nn.Conv2d(16, 16, kernel_size=3, padding=1),
+            nn.BatchNorm2d(16),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2, stride=2),
+            self.pool,
 
             nn.Conv2d(64, 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128),
             nn.ReLU(inplace=True),
             nn.Conv2d(128, 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2, stride=2),
+            self.pool,
 
-            nn.Conv2d(128, 256, kernel_size=3, padding=1),
+            nn.Conv2d(512, 1024, kernel_size=3, padding=1),
+            nn.BatchNorm2d(1024),
             nn.ReLU(inplace=True),
-            nn.Conv2d(256, 256, kernel_size=3, padding=1),
+            nn.Conv2d(1024, 1024, kernel_size=3, padding=1),
+            nn.BatchNorm2d(1024),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2, stride=2),
+            self.pool,
 
-            nn.Conv2d(256, 512, kernel_size=3, padding=1),
+            nn.Conv2d(4096, 8192, kernel_size=3, padding=1),
+            nn.BatchNorm2d(8192),
             nn.ReLU(inplace=True),
-            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+            nn.Conv2d(8192, 8192, kernel_size=3, padding=1),
+            nn.BatchNorm2d(8192),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2, stride=2),
+            self.pool,
         )
 
         self.bottleneck = nn.Sequential(
-            nn.Conv2d(512, 1024, kernel_size=3, padding=1),
+            nn.Conv2d(8192*4, 8192*8, kernel_size=3, padding=1),
+            nn.BatchNorm2d(8192*8),
             nn.ReLU(inplace=True),
-            nn.Conv2d(1024, 1024, kernel_size=3, padding=1),
+            nn.Conv2d(8192*8, 8192*8, kernel_size=3, padding=1),
+            nn.BatchNorm2d(8192*8),
             nn.ReLU(inplace=True),
         )
 
-        self.upconv4 = nn.ConvTranspose2d(1024, 512, kernel_size=3, stride=2)
+        self.upconv4 = nn.ConvTranspose2d(8192*8, 8192*4, kernel_size=3, stride=2)
         self.decoder4 = nn.Sequential(
             nn.Conv2d(1024, 512, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
